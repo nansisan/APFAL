@@ -31,6 +31,9 @@ class Calculator {
         a = a.replace(/(\.[0-9]*[1-9])0+$/, "$1");
         return a;
     }
+    ver() {
+        return "v0.1.0-alpha"
+    }
     add(a, b) {
         a = this.inputCheck(a), b = this.inputCheck(b);
         let
@@ -147,7 +150,7 @@ class Calculator {
         }
     }
     mod(a, b) {
-        a = BigInt(a), b = BigInt(b);
+        a = this.inputCheck(a), b = this.inputCheck(b);
         let
             quotient = this.divide(a, b, 0),
             product = this.multiply(quotient, b),
@@ -199,6 +202,30 @@ class Calculator {
     equals(a, b) {
         a = this.inputCheck(a), b = this.inputCheck(b);
         return this.subtract(a, b) === "0";
+    }
+
+    PI(decimalPlaces) {
+        let a = 1;
+        let b = this.divide(1, this.sqrt(2, decimalPlaces), decimalPlaces+1);
+        let t = this.divide(1, 4, decimalPlaces);
+        let p = 1;
+    
+        for (let i = 0; i < Math.log2(decimalPlaces); i++) {
+            let a_next = this.divide(this.add(a, b), 2, decimalPlaces+2);
+            let b_next = this.sqrt(this.multiply(a, b), decimalPlaces+2);
+            let t_next = this.subtract(t, this.multiply(p, this.pow(this.subtract(a, a_next), 2)));
+    
+            a = a_next;
+            b = b_next;
+            t = t_next;
+            p = this.multiply(2, p);
+        }
+    
+        let pi = this.divide(this.pow(this.add(a, b), 2), this.multiply(4, t), decimalPlaces);
+        return this.normalize(pi);
+    }
+    sqrt2(decimalPlaces) {
+        this.sqrt(2,decimalPlaces)
     }
 }
 const calc = new Calculator;
