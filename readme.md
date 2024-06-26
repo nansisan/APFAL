@@ -1,4 +1,4 @@
-# **任意精度浮動小数点演算ライブラリver0.1.1 使い方**
+# **任意精度浮動小数点演算ライブラリver0.2.0 使い方**
 このライブラリは任意精度の浮動小数点演算をサポートするJavaScriptのクラスです。基本的な演算（加算、減算、乗算、除算）から、高度な数学関数（累乗、階乗、組み合わせ、順列）まで、幅広くサポートしています。
 ## 目次
  - 仕様
@@ -11,6 +11,7 @@
 |:----------:|:-------------:|
 |演算可能桁数|323228496.6桁|
 |関数種類|22種|
+|定数種類|2種|
 |動作要件|ES2020対応のブラウザ(それ以外は知らん)|
 |入力型|Number, String, BigInt|
 |出力型|String, Boolean|
@@ -159,6 +160,7 @@
   - 戻り値： `a` を四捨五入した結果
 
 #### 比較処理
+
 - `greaterThan(a, b)`
   - 数値を比較します。
   - 引数：
@@ -180,6 +182,20 @@
     - `b`: 比較する数値
   - 戻り値： `a` = `b` であるか。
 
+#### 定数
+
+- `PI(decimalPlaces)`
+  - 円周率を出します。
+  - 引数：
+    - `decimalPlaces`
+  - 戻り値： 円周率
+
+- `sqrt2(decimalPlaces)`
+  - 2の平方根を出します。
+  - 引数：
+    - `decimalPlaces`
+  - 戻り値： 2の平方根
+
 これらのメソッドは、文字列または数値を引数として受け取ります。結果は文字列として返されます。このライブラリは、JavaScriptの数値型の精度制限を回避して、より正確な計算が可能になります。しかし、このコードは文字列の操作をかなり扱うため、計算速度が遅くなる可能性があります。したがって、高速な計算が必要な場合や精度がそれほど重要でない場合は、JavaScript の標準的な算術演算子を使用することをお勧めします。
 
 >注:Product関数の引数及びpowのb引数は小数点に対応していません。また関数使用後に正規化関数を実行することを推奨します。
@@ -195,31 +211,6 @@ calc.subtract(1.61,1.97)
 //-> -.36
 normalize(calc.subtract(1.61,1.97))
 //->'-0.36'
-```
-### 円周率計算(ガウスルジャンドルの公式)
-```js
-function gaussLegendre(iterations) {
-    let a = 1;
-    let b = calc.divide(1, calc.sqrt(2, iterations), iterations+1);
-    let t = calc.divide(1, 4, iterations);
-    let p = 1;
-
-    for (let i = 0; i < Math.log2(iterations); i++) {
-        let a_next = calc.divide(calc.add(a, b), 2, iterations+2);
-        let b_next = calc.sqrt(calc.multiply(a, b), iterations+2);
-        let t_next = calc.subtract(t, calc.multiply(p, calc.pow(calc.subtract(a, a_next), 2)), iterations+1);
-
-        a = a_next;
-        b = b_next;
-        t = t_next;
-        p = calc.multiply(2, p);
-    }
-
-    let pi = calc.divide(calc.pow(calc.add(a, b), 2), calc.multiply(4, t), iterations);
-    return calc.normalize(pi);
-}
-
-console.log(gaussLegendre(10));
 ```
 
 ## 参考
