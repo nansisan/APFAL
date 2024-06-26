@@ -1,7 +1,7 @@
 class Calculator {
     constructor() { }
     inputCheck(a) {
-        if (typeof a === "number" || typeof a === "bigint") return a;
+        if (typeof a === "number" || typeof a === "bigint") return this.normalize(a);
         if (typeof a === "string") {
             if (/-?[0-9]+(\.[0-9]+)?/.test(a)) return this.normalize(a);
             else throw new Error("Contains non-half-width digits.");
@@ -18,7 +18,7 @@ class Calculator {
         if (match) {
             var base = match[1];
             var exponent = match[2];
-            a = this.multiply(base, this.pow(10, exponent));
+            a = this.multiply(base, this.intpow(10, exponent, this.abs(exponent)));
             a = a.toString();
         }
         a = a.replace(/^(-?)0+/, "$1");
@@ -30,9 +30,9 @@ class Calculator {
         a = a.replace(/\.0+$/, "");
         a = a.replace(/(\.[0-9]*[1-9])0+$/, "$1");
         return a;
-    }
+    }    
     ver() {
-        return "v0.1.0-alpha"
+        return "v0.2.0"
     }
     add(a, b) {
         a = this.inputCheck(a), b = this.inputCheck(b);
@@ -76,8 +76,8 @@ class Calculator {
         }
         return BigInt(a) * BigInt(b) + "";
     }
-    divide(a, b, decimalPlaces) {
-        if (a = this.inputCheck(a), b = this.inputCheck(b), decimalPlaces = this.inputCheck(decimalPlaces), 0 > decimalPlaces) throw new Error("decimalPlaces must be non-negative");
+    divide(a, b, decimalPlaces = 20) {
+        if (a = this.inputCheck(a), b = this.inputCheck(b), decimalPlaces = parseInt(this.inputCheck(decimalPlaces),10), 0 > decimalPlaces) throw new Error("decimalPlaces must be non-negative");
         if (0 == b || "0" == b) throw new Error("division by zero");
         const
             stringA = a.toString(),
@@ -95,11 +95,12 @@ class Calculator {
             decimalIndex = quotientString.length - decimalPlaces;
         return quotientString.slice(0, decimalIndex) + (0 < decimalPlaces ? "." : "") + quotientString.slice(decimalIndex);
     }
-    intpow(a, b) {
-        if (a = this.inputCheck(a), b = this.inputCheck(b), 0 > b) throw new Error("exponent must be non-negative");
-        let result = 1n;
-        for (a = BigInt(a); b;) 1 & b && (result *= a), a *= a, b >>= 1;
-        return result.toString();
+    intpow(a, b, decimalPlaces = 0) {
+        a = this.inputCheck(a), b = this.inputCheck(b);
+        let result = 1n, neg = (b < 0);
+        b = BigInt(neg ? -b : b);
+        for (a = BigInt(a); b; result *= (b & 1n) ? a : 1n, a *= a, b >>= 1n);
+        return neg ? this.divide(1n, result, decimalPlaces) : result.toString();
     }
     factorial(a) {
         return a = this.inputCheck(a), a = BigInt(a), 0n === a ? "1" : 1n === a || 2n === a ? a.toString() : this.product(2n, a).toString();
@@ -126,7 +127,7 @@ class Calculator {
         }
         return this.divide(this.factorial(n), this.factorial(n - r), 0);
     }
-    sum(a, b, decimalPlaces) {
+    sum(a, b, decimalPlaces = 0) {
         return a = this.inputCheck(a), b = this.inputCheck(b), decimalPlaces = this.inputCheck(decimalPlaces), this.divide(this.multiply(this.add(this.subtract(b, a), 1n), this.add(a, b)), 2n, decimalPlaces);
     }
     pow(a, b) {
@@ -135,13 +136,12 @@ class Calculator {
                 decimalA = (a + "").includes(".") ? (a + "").split(".")[1].length : 0,
                 bigIntA = BigInt((a + "").replace(".", "")) * 10n ** BigInt(decimalA),
                 power = this.intpow(bigIntA.toString(), b),
-                decimalIndex = power.length - decimalA * b,
                 result = this.divide(power, this.intpow(10, 2 * decimalA * b), decimalA * b);
             return result;
         }
         return this.intpow(a, b);
     }
-    sqrt(a, decimalPlaces) {
+    sqrt(a, decimalPlaces = 20) {
         a = this.inputCheck(a), decimalPlaces = this.inputCheck(decimalPlaces);
         for (let guess = a; ;) {
             let newGuess = this.divide(this.add(guess, this.divide(a, guess, decimalPlaces)), 2, decimalPlaces);
@@ -157,7 +157,7 @@ class Calculator {
             remainder = this.subtract(a, product);
         return remainder;
     }
-    floor(a, decimalPlaces) {
+    floor(a, decimalPlaces = 20) {
         if ((a + "").includes(".")) {
             a = this.multiply(a, this.pow(10, decimalPlaces));
             let parts = (a + "").split(".");
@@ -165,7 +165,7 @@ class Calculator {
         }
         return a;
     }
-    ceil(a, decimalPlaces) {
+    ceil(a, decimalPlaces = 20) {
         if ((a + "").includes(".")) {
             a = this.multiply(a, this.pow(10, decimalPlaces));
             let
@@ -175,7 +175,7 @@ class Calculator {
         }
         return a;
     }
-    round(a, decimalPlaces) {
+    round(a, decimalPlaces = 20) {
         if ((a + "").includes(".")) {
             a = this.multiply(a, this.pow(10, decimalPlaces));
             let
@@ -204,7 +204,7 @@ class Calculator {
         return this.subtract(a, b) === "0";
     }
 
-    PI(decimalPlaces) {
+    PI(decimalPlaces = 20) {
         let a = 1;
         let b = this.divide(1, this.sqrt(2, decimalPlaces), decimalPlaces+1);
         let t = this.divide(1, 4, decimalPlaces);
