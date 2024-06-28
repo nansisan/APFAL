@@ -3,21 +3,19 @@ class Calculator {
     inputCheck(a) {
         if (typeof a === "number" || typeof a === "bigint") return this.normalize(a);
         if (typeof a === "string") {
-            if (/-?[0-9]+(\.[0-9]+)?/.test(a)) return this.normalize(a);
+            if (/^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(a)) return this.normalize(a);
             else throw new Error("Contains non-half-width digits.");
-        } else {
-            throw new Error("The input value should be a number, a string of one-byte numbers only, or a BigInt type.");
-        }
+        } else throw new Error("The input value should be a number, a string of one-byte numbers only, or a BigInt type.");
     }
     normalize(a) {
-        if ("number" == typeof a || "bigint" == typeof a) {
-            a = a.toString();
-        }
-        var expPattern = /^(-?\d+\.?\d*)e([+-]\d+)$/;
+        if ("number" == typeof a || "bigint" == typeof a) a = a.toString();
+        if (a.startsWith("+")) a = a.slice(1);
+        if (a == 0) return a;
+        var expPattern = /^([+-]?\d+\.?\d*)[eE]([+-]?\d+)$/;
         var match = a.match(expPattern);
         if (match) {
-            var base = match[1];
-            var exponent = match[2];
+            var base = match[1],
+                exponent = match[2];
             a = this.multiply(base, this.intpow(10, exponent, this.abs(exponent)));
             a = a.toString();
         }
@@ -32,7 +30,7 @@ class Calculator {
         return a;
     }    
     ver() {
-        return "v0.2.0"
+        return "v0.3.0"
     }
     add(a, b) {
         a = this.inputCheck(a), b = this.inputCheck(b);
@@ -130,14 +128,16 @@ class Calculator {
     sum(a, b, decimalPlaces = 0) {
         return a = this.inputCheck(a), b = this.inputCheck(b), decimalPlaces = this.inputCheck(decimalPlaces), this.divide(this.multiply(this.add(this.subtract(b, a), 1n), this.add(a, b)), 2n, decimalPlaces);
     }
-    pow(a, b) {
-        if (a = this.inputCheck(a), b = this.inputCheck(b), (a + "").includes(".")) {
+    pow(a, b, decimalPlaces = 20) {
+        a = this.inputCheck(a), b = this.inputCheck(b);
+        if (b < 0) a = this.divide(1, a, decimalPlaces), b = -b;
+        if ((a + "").includes(".")) {
             let
                 decimalA = (a + "").includes(".") ? (a + "").split(".")[1].length : 0,
                 bigIntA = BigInt((a + "").replace(".", "")) * 10n ** BigInt(decimalA),
                 power = this.intpow(bigIntA.toString(), b),
-                result = this.divide(power, this.intpow(10, 2 * decimalA * b), decimalA * b);
-            return result;
+                result = this.divide(power, this.intpow(10, 2 * decimalA * b), this.abs(decimalA * b));
+            return this.round(result, decimalPlaces);
         }
         return this.intpow(a, b);
     }
